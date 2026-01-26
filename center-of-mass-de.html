@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Körperschwerpunkt-Berechner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-input-label:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px auto;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f5f5f5;
+            max-width: 100%;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-panel h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .points-list {
+            list-style: none;
+            margin: 10px 0;
+        }
+
+        .points-list li {
+            padding: 8px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .point-number {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 10px;
+        }
+
+        .point-coords {
+            color: #666;
+            font-family: monospace;
+        }
+
+        .result {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
+        .result h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1b5e20;
+            font-family: monospace;
+        }
+
+        .weight-input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .next-point-guide {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .next-point-guide h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .next-point-guide .next-point-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1976d2;
+            margin: 10px 0;
+        }
+
+        .next-point-guide.complete {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+
+        .next-point-guide.complete h3 {
+            color: #2e7d32;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Körperschwerpunkt-Berechner</h1>
+        <p class="subtitle">Laden Sie ein Bild hoch und markieren Sie Punkte, um den Körperschwerpunkt zu berechnen</p>
+
+        <div class="instructions">
+            <h3>📋 Anleitung</h3>
+            <ol>
+                <li>Klicken Sie auf "Bild auswählen", um ein Foto von Ihrem Gerät auszuwählen</li>
+                <li>Folgen Sie der Anleitung unten und klicken Sie auf das Bild, um Körperpunkte in der richtigen Reihenfolge zu markieren</li>
+                <li>Die Punkte werden automatisch mit Linien verbunden</li>
+                <li>Klicken Sie auf "Körperschwerpunkt berechnen", um das Ergebnis zu sehen</li>
+                <li>Verwenden Sie "Alle Punkte löschen", um von vorne zu beginnen</li>
+            </ol>
+        </div>
+
+        <div id="nextPointGuide" class="next-point-guide" style="display: none;">
+            <h3>📍 Nächster zu markierender Punkt</h3>
+            <div class="next-point-name" id="nextPointName">-</div>
+            <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                Punkt <span id="currentPointIndex">0</span> von <span id="totalPoints">17</span>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="imageInput" accept="image/*" />
+                <label for="imageInput" class="file-input-label">
+                    📷 Bild auswählen
+                </label>
+            </div>
+        </div>
+
+        <div id="canvasWrapper" style="display: none;">
+            <div class="canvas-container">
+                <canvas id="imageCanvas"></canvas>
+            </div>
+
+            <div class="controls">
+                <button class="btn-primary" onclick="calculateCenterOfMass()">
+                    🧮 Körperschwerpunkt berechnen
+                </button>
+                <button class="btn-secondary" onclick="clearAllPoints()">
+                    🗑️ Alle Punkte löschen
+                </button>
+                <button class="btn-danger" onclick="resetImage()">
+                    🔄 Bild zurücksetzen
+                </button>
+            </div>
+
+            <div class="info-panel">
+                <h3>📍 Markierte Punkte</h3>
+                <ul id="pointsList" class="points-list">
+                    <li style="color: #999; font-style: italic;">Noch keine Punkte hinzugefügt. Klicken Sie auf das Bild, um Punkte hinzuzufügen.</li>
+                </ul>
+            </div>
+
+            <div id="resultPanel" style="display: none;" class="result">
+                <h3>✨ Körperschwerpunkt-Ergebnis</h3>
+                <div class="result-value" id="resultValue"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let canvas = document.getElementById('imageCanvas');
+        let ctx = canvas.getContext('2d');
+        let imageInput = document.getElementById('imageInput');
+        let points = [];
+        let currentImage = null;
+        let imageScale = 1;
+        let imageOffsetX = 0;
+        let imageOffsetY = 0;
+
+        // Körperteil-Sequenz mit Bezeichnungen und Gewichten (basierend auf dem ursprünglichen System)
+        const bodyPartSequence = [
+            { name: "Linke Fußspitze", weight: 2.0, connectTo: null },           // 0
+            { name: "Linker Knöchel", weight: 2.0, connectTo: 0 },                // 1
+            { name: "Linkes Knie", weight: 5.0, connectTo: 1 },                 // 2
+            { name: "Linke Hüfte", weight: 12.0, connectTo: 2 },                // 3
+            { name: "Rechte Hüfte", weight: 12.0, connectTo: 3 },               // 4
+            { name: "Rechtes Knie", weight: 5.0, connectTo: 4 },                 // 5
+            { name: "Rechter Knöchel", weight: 2.0, connectTo: 5 },               // 6
+            { name: "Rechte Fußspitze", weight: 2.0, connectTo: 6 },            // 7
+            { name: "Rechte Handspitze", weight: 1.0, connectTo: null },           // 8
+            { name: "Rechtes Handgelenk", weight: 1.0, connectTo: 8 },               // 9
+            { name: "Rechter Ellenbogen", weight: 2.0, connectTo: 9 },                // 10
+            { name: "Rechte Schulter", weight: 3.0, connectTo: 10 },            // 11
+            { name: "Linke Schulter", weight: 3.0, connectTo: 11 },             // 12
+            { name: "Linker Ellenbogen", weight: 2.0, connectTo: 12 },               // 13
+            { name: "Linkes Handgelenk", weight: 1.0, connectTo: 13 },               // 14
+            { name: "Linke Handspitze", weight: 1.0, connectTo: 14 },            // 15
+            { name: "Kopf", weight: 7.0, connectTo: null }                    // 16
+        ];
+
+        // Zusätzliche Verbindungen für den Rumpf
+        const torsoConnections = [
+            [3, 4],  // Linke Hüfte zu rechte Hüfte
+            [11, 12], // Rechte Schulter zu linke Schulter
+            [11, 3],  // Rechte Schulter zu linke Hüfte (über berechneten Mittelpunkt)
+            [12, 4]   // Linke Schulter zu rechte Hüfte (über berechneten Mittelpunkt)
+        ];
+
+        // Bild laden, wenn Datei ausgewählt wird
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        currentImage = img;
+                        setupCanvas(img);
+                        document.getElementById('canvasWrapper').style.display = 'block';
+                        points = [];
+                        updatePointsList();
+                        document.getElementById('resultPanel').style.display = 'none';
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Canvas mit korrekter Skalierung einrichten
+        function setupCanvas(img) {
+            const maxWidth = Math.min(window.innerWidth - 100, 1000);
+            const maxHeight = Math.min(window.innerHeight - 300, 800);
+            
+            let width = img.width;
+            let height = img.height;
+            
+            // Anpassen
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+            if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            imageScale = width / img.width;
+            imageOffsetX = 0;
+            imageOffsetY = 0;
+            
+            drawImage();
+            updateNextPointGuide();
+        }
+
+        // Bild und Punkte zeichnen
+        function drawImage() {
+            if (!currentImage) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, imageOffsetX, imageOffsetY, canvas.width, canvas.height);
+            
+            // Verbindungslinien zuerst zeichnen (damit sie hinter den Punkten erscheinen)
+            drawConnectingLines();
+            
+            // Alle Punkte zeichnen
+            points.forEach((point, index) => {
+                drawPoint(point.x, point.y, index + 1, point.weight, point.label);
+            });
+            
+            // Rumpfzentrum zeichnen, falls es berechnet werden kann
+            const torso = calculateTorsoCenter();
+            if (torso) {
+                drawTorsoPoint(torso.x, torso.y);
+            }
+            
+            // Körperschwerpunkt zeichnen, falls berechnet
+            const resultPanel = document.getElementById('resultPanel');
+            if (resultPanel.style.display !== 'none') {
+                const result = calculateCenterOfMassInternal();
+                if (result) {
+                    drawCenterOfMass(result.x, result.y);
+                }
+            }
+        }
+
+        // Linien zeichnen, die Punkte verbinden
+        function drawConnectingLines() {
+            if (points.length < 2) return;
+            
+            ctx.save();
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            
+            // Sequenzielle Verbindungen zeichnen
+            for (let i = 1; i < points.length; i++) {
+                const point = points[i];
+                const part = bodyPartSequence[i];
+                
+                if (part && part.connectTo !== null && points[part.connectTo]) {
+                    const prevPoint = points[part.connectTo];
+                    ctx.beginPath();
+                    ctx.moveTo(prevPoint.x, prevPoint.y);
+                    ctx.lineTo(point.x, point.y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Rumpfverbindungen zeichnen (Hüften und Schultern)
+            if (points.length > 4) {
+                // Linke Hüfte zu rechte Hüfte
+                if (points[3] && points[4]) {
+                    ctx.beginPath();
+                    ctx.moveTo(points[3].x, points[3].y);
+                    ctx.lineTo(points[4].x, points[4].y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Schulterverbindung zeichnen
+            if (points.length > 12 && points[11] && points[12]) {
+                ctx.beginPath();
+                ctx.moveTo(points[11].x, points[11].y);
+                ctx.lineTo(points[12].x, points[12].y);
+                ctx.stroke();
+            }
+            
+            // Rumpf: Schultern zu Hüften (über Mittelpunkte) - nur wenn alle 4 Punkte existieren
+            if (points.length > 12 && points[3] && points[4] && points[11] && points[12]) {
+                const hipMidX = (points[3].x + points[4].x) / 2;
+                const hipMidY = (points[3].y + points[4].y) / 2;
+                const shoulderMidX = (points[11].x + points[12].x) / 2;
+                const shoulderMidY = (points[11].y + points[12].y) / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(hipMidX, hipMidY);
+                ctx.lineTo(shoulderMidX, shoulderMidY);
+                ctx.stroke();
+            }
+            
+            // Linie von Schultern zu Kopf zeichnen
+            if (points.length > 16 && points[11] && points[12] && points[16]) {
+                const shoulderMidX = (points[11].x + points[12].x) / 2;
+                const shoulderMidY = (points[11].y + points[12].y) / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(shoulderMidX, shoulderMidY);
+                ctx.lineTo(points[16].x, points[16].y);
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+
+        // Punktmarkierung zeichnen
+        function drawPoint(x, y, number, weight, label) {
+            ctx.save();
+            
+            // Äußerer Kreis
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, 2 * Math.PI);
+            ctx.fillStyle = '#667eea';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Innerer Kreis
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // Punktnummer
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(number, x, y);
+            
+            // Beschriftung unter dem Punkt (optional, zur Klarheit)
+            if (label && number <= 17) {
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                const shortLabel = label.length > 12 ? label.substring(0, 10) + '...' : label;
+                ctx.fillText(shortLabel, x, y + 18);
+            }
+            
+            ctx.restore();
+        }
+
+        // Rumpfzentrum-Punkt zeichnen (berechneter Punkt)
+        function drawTorsoPoint(x, y) {
+            ctx.save();
+            
+            // Äußerer Kreis - andere Farbe, um zu zeigen, dass es berechnet ist
+            ctx.beginPath();
+            ctx.arc(x, y, 14, 0, 2 * Math.PI);
+            ctx.fillStyle = '#4caf50';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Innerer Kreis
+            ctx.beginPath();
+            ctx.arc(x, y, 7, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // "R" Beschriftung
+            ctx.fillStyle = '#4caf50';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('R', x, y);
+            
+            // Beschriftung darunter
+            ctx.fillStyle = '#2e7d32';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Rumpf', x, y + 20);
+            
+            ctx.restore();
+        }
+
+        // Körperschwerpunkt-Markierung zeichnen
+        function drawCenterOfMass(x, y) {
+            ctx.save();
+            
+            // Großes Fadenkreuz
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x - 20, y);
+            ctx.lineTo(x + 20, y);
+            ctx.moveTo(x, y - 20);
+            ctx.lineTo(x, y + 20);
+            ctx.stroke();
+            
+            // Mittelkreis
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // Canvas-Klicks behandeln
+        canvas.addEventListener('click', function(e) {
+            if (!currentImage) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            addPoint(x, y);
+        });
+
+        // Touch-Ereignisse für Mobilgeräte behandeln
+        canvas.addEventListener('touchend', function(e) {
+            if (!currentImage) return;
+            
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.changedTouches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            addPoint(x, y);
+        });
+
+        // Punkt hinzufügen
+        function addPoint(x, y) {
+            const currentIndex = points.length;
+            
+            if (currentIndex >= bodyPartSequence.length) {
+                alert('Alle Körperpunkte wurden markiert! Sie können den Körperschwerpunkt trotzdem mit den aktuellen Punkten berechnen.');
+                return;
+            }
+            
+            const part = bodyPartSequence[currentIndex];
+            points.push({
+                x: x,
+                y: y,
+                weight: part.weight,
+                label: part.name
+            });
+            
+            drawImage();
+            updatePointsList();
+            updateNextPointGuide();
+            document.getElementById('resultPanel').style.display = 'none';
+        }
+
+        // Nächster Punkt-Anleitung aktualisieren
+        function updateNextPointGuide() {
+            const guide = document.getElementById('nextPointGuide');
+            const currentIndex = points.length;
+            
+            if (currentIndex >= bodyPartSequence.length) {
+                guide.className = 'next-point-guide complete';
+                guide.querySelector('h3').textContent = '✅ Alle Punkte markiert!';
+                document.getElementById('nextPointName').textContent = 'Bereit zur Berechnung des Körperschwerpunkts';
+                document.getElementById('currentPointIndex').textContent = bodyPartSequence.length;
+            } else {
+                guide.className = 'next-point-guide';
+                guide.querySelector('h3').textContent = '📍 Nächster zu markierender Punkt';
+                const part = bodyPartSequence[currentIndex];
+                document.getElementById('nextPointName').textContent = part.name;
+                document.getElementById('currentPointIndex').textContent = currentIndex + 1;
+            }
+            
+            document.getElementById('totalPoints').textContent = bodyPartSequence.length;
+            guide.style.display = 'block';
+        }
+
+        // Rumpfzentrum-Punkt berechnen (basierend auf dem ursprünglichen System)
+        function calculateTorsoCenter() {
+            // Benötigt beide Hüften (Punkte 3, 4) und beide Schultern (Punkte 11, 12)
+            if (points.length < 13 || !points[3] || !points[4] || !points[11] || !points[12]) {
+                return null;
+            }
+            
+            // Hüftmittelpunkt
+            const hipMidX = (points[3].x + points[4].x) / 2;
+            const hipMidY = (points[3].y + points[4].y) / 2;
+            
+            // Schultermittelpunkt
+            const shoulderMidX = (points[11].x + points[12].x) / 2;
+            const shoulderMidY = (points[11].y + points[12].y) / 2;
+            
+            // Rumpfzentrum: 44% vom Hüftmittelpunkt in Richtung Schultermittelpunkt
+            // Verwendet die gleiche Formel wie das Original: new_vektor mit VFaktor=0.44
+            const vFactor = 0.44;
+            const torsoX = Math.round(((1 - vFactor) * shoulderMidX) + (vFactor * hipMidX));
+            const torsoY = Math.round(((1 - vFactor) * shoulderMidY) + (vFactor * hipMidY));
+            
+            return {
+                x: torsoX,
+                y: torsoY,
+                weight: 43.0,
+                label: "Rumpf (berechnet)"
+            };
+        }
+
+        // Punkte-Liste-Anzeige aktualisieren
+        function updatePointsList() {
+            const list = document.getElementById('pointsList');
+            
+            if (points.length === 0) {
+                list.innerHTML = '<li style="color: #999; font-style: italic;">Noch keine Punkte hinzugefügt. Klicken Sie auf das Bild, um Punkte hinzuzufügen.</li>';
+                return;
+            }
+            
+            let html = points.map((point, index) => {
+                const part = bodyPartSequence[index];
+                const label = part ? part.name : `Punkt ${index + 1}`;
+                return `
+                    <li>
+                        <span>
+                            <span class="point-number">${index + 1}. ${label}:</span>
+                            <span class="point-coords">(${Math.round(point.x)}, ${Math.round(point.y)})</span>
+                        </span>
+                        <span>
+                            Gewicht: 
+                            <input type="number" 
+                                   class="weight-input" 
+                                   value="${point.weight.toFixed(1)}" 
+                                   step="0.1" 
+                                   min="0.1"
+                                   onchange="updatePointWeight(${index}, this.value)">
+                        </span>
+                    </li>
+                `;
+            }).join('');
+            
+            // Rumpf hinzufügen, falls er berechnet werden kann
+            const torso = calculateTorsoCenter();
+            if (torso) {
+                html += `
+                    <li style="background: #e3f2fd; font-weight: bold;">
+                        <span>
+                            <span class="point-number">Rumpf (berechnet):</span>
+                            <span class="point-coords">(${torso.x}, ${torso.y})</span>
+                        </span>
+                        <span>
+                            Gewicht: <strong>${torso.weight.toFixed(1)}</strong> (fest)
+                        </span>
+                    </li>
+                `;
+            }
+            
+            list.innerHTML = html;
+        }
+
+        // Punktgewicht aktualisieren
+        function updatePointWeight(index, weight) {
+            const newWeight = parseFloat(weight);
+            if (!isNaN(newWeight) && newWeight > 0) {
+                points[index].weight = newWeight;
+                drawImage();
+                // Neu berechnen, falls Ergebnis bereits angezeigt wurde
+                if (document.getElementById('resultPanel').style.display !== 'none') {
+                    calculateCenterOfMass();
+                }
+            }
+        }
+
+        // Körperschwerpunkt berechnen
+        function calculateCenterOfMassInternal() {
+            if (points.length === 0) {
+                return null;
+            }
+            
+            let totalWeight = 0;
+            let weightedX = 0;
+            let weightedY = 0;
+            
+            // Alle markierten Punkte hinzufügen
+            points.forEach(point => {
+                const weight = point.weight || 1.0;
+                weightedX += point.x * weight;
+                weightedY += point.y * weight;
+                totalWeight += weight;
+            });
+            
+            // Rumpf hinzufügen, falls er berechnet werden kann (mit 43% Gewicht)
+            const torso = calculateTorsoCenter();
+            if (torso) {
+                weightedX += torso.x * torso.weight;
+                weightedY += torso.y * torso.weight;
+                totalWeight += torso.weight;
+            }
+            
+            if (totalWeight === 0) {
+                return null;
+            }
+            
+            return {
+                x: weightedX / totalWeight,
+                y: weightedY / totalWeight
+            };
+        }
+
+        // Körperschwerpunkt berechnen und anzeigen
+        function calculateCenterOfMass() {
+            const result = calculateCenterOfMassInternal();
+            
+            if (!result) {
+                alert('Bitte fügen Sie mindestens einen Punkt hinzu, um den Körperschwerpunkt zu berechnen.');
+                return;
+            }
+            
+            document.getElementById('resultValue').textContent = 
+                `Körperschwerpunkt: (${Math.round(result.x)}, ${Math.round(result.y)})`;
+            document.getElementById('resultPanel').style.display = 'block';
+            
+            drawImage();
+        }
+
+        // Alle Punkte löschen
+        function clearAllPoints() {
+            points = [];
+            drawImage();
+            updatePointsList();
+            updateNextPointGuide();
+            document.getElementById('resultPanel').style.display = 'none';
+        }
+
+        // Bild zurücksetzen
+        function resetImage() {
+            if (confirm('Sind Sie sicher, dass Sie zurücksetzen möchten? Dies löscht das Bild und alle Punkte.')) {
+                currentImage = null;
+                points = [];
+                imageInput.value = '';
+                document.getElementById('canvasWrapper').style.display = 'none';
+                document.getElementById('resultPanel').style.display = 'none';
+                document.getElementById('nextPointGuide').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

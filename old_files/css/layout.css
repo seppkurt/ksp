@@ -1,0 +1,34 @@
+body {
+	font-family: Arial, Helvetica, sans-serif;
+	color: #006600
+}
+
+td {
+	font-family: Arial, Helvetica, sans-serif;
+	color: #006600
+}
+
+th {
+	font-family: Arial, Helvetica, sans-serif;
+	color: #006600
+}
+h4 {
+	font-size: 16px;
+	line-height: 28px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	margin-right: 4px;
+
+}
+.ksp {
+	border: 1px solid #000000;
+}
+.ksp-pkt {
+	border: 1px solid #000000;
+	font-size: 10px;
+	font-weight: bold;
+	line-height: 18px;
+
+
+
+}

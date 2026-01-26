@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Center of Mass Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-input-label:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px auto;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f5f5f5;
+            max-width: 100%;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-panel h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .points-list {
+            list-style: none;
+            margin: 10px 0;
+        }
+
+        .points-list li {
+            padding: 8px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .point-number {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 10px;
+        }
+
+        .point-coords {
+            color: #666;
+            font-family: monospace;
+        }
+
+        .result {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
+        .result h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1b5e20;
+            font-family: monospace;
+        }
+
+        .weight-input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .next-point-guide {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .next-point-guide h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .next-point-guide .next-point-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1976d2;
+            margin: 10px 0;
+        }
+
+        .next-point-guide.complete {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+
+        .next-point-guide.complete h3 {
+            color: #2e7d32;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Center of Mass Calculator</h1>
+        <p class="subtitle">Upload an image and mark points to calculate the center of mass</p>
+
+        <div class="instructions">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Click "Choose Image" to select a photo from your device</li>
+                <li>Follow the guide below and click on the image to mark body points in order</li>
+                <li>Points will be automatically connected with lines</li>
+                <li>Click "Calculate Center of Mass" to see the result</li>
+                <li>Use "Clear All Points" to start over</li>
+            </ol>
+        </div>
+
+        <div id="nextPointGuide" class="next-point-guide" style="display: none;">
+            <h3>📍 Next Point to Mark</h3>
+            <div class="next-point-name" id="nextPointName">-</div>
+            <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                Point <span id="currentPointIndex">0</span> of <span id="totalPoints">17</span>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="imageInput" accept="image/*" />
+                <label for="imageInput" class="file-input-label">
+                    📷 Choose Image
+                </label>
+            </div>
+        </div>
+
+        <div id="canvasWrapper" style="display: none;">
+            <div class="canvas-container">
+                <canvas id="imageCanvas"></canvas>
+            </div>
+
+            <div class="controls">
+                <button class="btn-primary" onclick="calculateCenterOfMass()">
+                    🧮 Calculate Center of Mass
+                </button>
+                <button class="btn-secondary" onclick="clearAllPoints()">
+                    🗑️ Clear All Points
+                </button>
+                <button class="btn-danger" onclick="resetImage()">
+                    🔄 Reset Image
+                </button>
+            </div>
+
+            <div class="info-panel">
+                <h3>📍 Marked Points</h3>
+                <ul id="pointsList" class="points-list">
+                    <li style="color: #999; font-style: italic;">No points added yet. Click on the image to add points.</li>
+                </ul>
+            </div>
+
+            <div id="resultPanel" style="display: none;" class="result">
+                <h3>✨ Center of Mass Result</h3>
+                <div class="result-value" id="resultValue"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let canvas = document.getElementById('imageCanvas');
+        let ctx = canvas.getContext('2d');
+        let imageInput = document.getElementById('imageInput');
+        let points = [];
+        let currentImage = null;
+        let imageScale = 1;
+        let imageOffsetX = 0;
+        let imageOffsetY = 0;
+
+        // Body part sequence with labels and weights (based on original system)
+        const bodyPartSequence = [
+            { name: "Left Foot Tip", weight: 2.0, connectTo: null },           // 0
+            { name: "Left Ankle", weight: 2.0, connectTo: 0 },                // 1
+            { name: "Left Knee", weight: 5.0, connectTo: 1 },                 // 2
+            { name: "Left Hip", weight: 12.0, connectTo: 2 },                // 3
+            { name: "Right Hip", weight: 12.0, connectTo: 3 },               // 4
+            { name: "Right Knee", weight: 5.0, connectTo: 4 },                 // 5
+            { name: "Right Ankle", weight: 2.0, connectTo: 5 },               // 6
+            { name: "Right Foot Tip", weight: 2.0, connectTo: 6 },            // 7
+            { name: "Right Hand Tip", weight: 1.0, connectTo: null },           // 8
+            { name: "Right Wrist", weight: 1.0, connectTo: 8 },               // 9
+            { name: "Right Elbow", weight: 2.0, connectTo: 9 },                // 10
+            { name: "Right Shoulder", weight: 3.0, connectTo: 10 },            // 11
+            { name: "Left Shoulder", weight: 3.0, connectTo: 11 },             // 12
+            { name: "Left Elbow", weight: 2.0, connectTo: 12 },               // 13
+            { name: "Left Wrist", weight: 1.0, connectTo: 13 },               // 14
+            { name: "Left Hand Tip", weight: 1.0, connectTo: 14 },            // 15
+            { name: "Head", weight: 7.0, connectTo: null }                    // 16
+        ];
+
+        // Additional connections for torso
+        const torsoConnections = [
+            [3, 4],  // Left hip to right hip
+            [11, 12], // Right shoulder to left shoulder
+            [11, 3],  // Right shoulder to left hip (via calculated midpoint)
+            [12, 4]   // Left shoulder to right hip (via calculated midpoint)
+        ];
+
+        // Load image when file is selected
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        currentImage = img;
+                        setupCanvas(img);
+                        document.getElementById('canvasWrapper').style.display = 'block';
+                        points = [];
+                        updatePointsList();
+                        document.getElementById('resultPanel').style.display = 'none';
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Setup canvas with proper scaling
+        function setupCanvas(img) {
+            const maxWidth = Math.min(window.innerWidth - 100, 1000);
+            const maxHeight = Math.min(window.innerHeight - 300, 800);
+            
+            let width = img.width;
+            let height = img.height;
+            
+            // Scale to fit
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+            if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            imageScale = width / img.width;
+            imageOffsetX = 0;
+            imageOffsetY = 0;
+            
+            drawImage();
+            updateNextPointGuide();
+        }
+
+        // Draw image and points
+        function drawImage() {
+            if (!currentImage) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImage, imageOffsetX, imageOffsetY, canvas.width, canvas.height);
+            
+            // Draw connecting lines first (so they appear behind points)
+            drawConnectingLines();
+            
+            // Draw all points
+            points.forEach((point, index) => {
+                drawPoint(point.x, point.y, index + 1, point.weight, point.label);
+            });
+            
+            // Draw torso center if it can be calculated
+            const torso = calculateTorsoCenter();
+            if (torso) {
+                drawTorsoPoint(torso.x, torso.y);
+            }
+            
+            // Draw center of mass if calculated
+            const resultPanel = document.getElementById('resultPanel');
+            if (resultPanel.style.display !== 'none') {
+                const result = calculateCenterOfMassInternal();
+                if (result) {
+                    drawCenterOfMass(result.x, result.y);
+                }
+            }
+        }
+
+        // Draw lines connecting points
+        function drawConnectingLines() {
+            if (points.length < 2) return;
+            
+            ctx.save();
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            
+            // Draw sequential connections
+            for (let i = 1; i < points.length; i++) {
+                const point = points[i];
+                const part = bodyPartSequence[i];
+                
+                if (part && part.connectTo !== null && points[part.connectTo]) {
+                    const prevPoint = points[part.connectTo];
+                    ctx.beginPath();
+                    ctx.moveTo(prevPoint.x, prevPoint.y);
+                    ctx.lineTo(point.x, point.y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw torso connections (hips and shoulders)
+            if (points.length > 4) {
+                // Left hip to right hip
+                if (points[3] && points[4]) {
+                    ctx.beginPath();
+                    ctx.moveTo(points[3].x, points[3].y);
+                    ctx.lineTo(points[4].x, points[4].y);
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw shoulder connection
+            if (points.length > 12 && points[11] && points[12]) {
+                ctx.beginPath();
+                ctx.moveTo(points[11].x, points[11].y);
+                ctx.lineTo(points[12].x, points[12].y);
+                ctx.stroke();
+            }
+            
+            // Torso: shoulders to hips (via midpoints) - only if all 4 points exist
+            if (points.length > 12 && points[3] && points[4] && points[11] && points[12]) {
+                const hipMidX = (points[3].x + points[4].x) / 2;
+                const hipMidY = (points[3].y + points[4].y) / 2;
+                const shoulderMidX = (points[11].x + points[12].x) / 2;
+                const shoulderMidY = (points[11].y + points[12].y) / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(hipMidX, hipMidY);
+                ctx.lineTo(shoulderMidX, shoulderMidY);
+                ctx.stroke();
+            }
+            
+            // Draw line from shoulders to head
+            if (points.length > 16 && points[11] && points[12] && points[16]) {
+                const shoulderMidX = (points[11].x + points[12].x) / 2;
+                const shoulderMidY = (points[11].y + points[12].y) / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(shoulderMidX, shoulderMidY);
+                ctx.lineTo(points[16].x, points[16].y);
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+
+        // Draw a point marker
+        function drawPoint(x, y, number, weight, label) {
+            ctx.save();
+            
+            // Outer circle
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, 2 * Math.PI);
+            ctx.fillStyle = '#667eea';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Inner circle
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // Point number
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(number, x, y);
+            
+            // Label below point (optional, for clarity)
+            if (label && number <= 17) {
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                const shortLabel = label.length > 12 ? label.substring(0, 10) + '...' : label;
+                ctx.fillText(shortLabel, x, y + 18);
+            }
+            
+            ctx.restore();
+        }
+
+        // Draw torso center point (calculated point)
+        function drawTorsoPoint(x, y) {
+            ctx.save();
+            
+            // Outer circle - different color to show it's calculated
+            ctx.beginPath();
+            ctx.arc(x, y, 14, 0, 2 * Math.PI);
+            ctx.fillStyle = '#4caf50';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Inner circle
+            ctx.beginPath();
+            ctx.arc(x, y, 7, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // "T" label
+            ctx.fillStyle = '#4caf50';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('T', x, y);
+            
+            // Label below
+            ctx.fillStyle = '#2e7d32';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('Torso', x, y + 20);
+            
+            ctx.restore();
+        }
+
+        // Draw center of mass marker
+        function drawCenterOfMass(x, y) {
+            ctx.save();
+            
+            // Large crosshair
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x - 20, y);
+            ctx.lineTo(x + 20, y);
+            ctx.moveTo(x, y - 20);
+            ctx.lineTo(x, y + 20);
+            ctx.stroke();
+            
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // Handle canvas clicks
+        canvas.addEventListener('click', function(e) {
+            if (!currentImage) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            addPoint(x, y);
+        });
+
+        // Handle touch events for mobile
+        canvas.addEventListener('touchend', function(e) {
+            if (!currentImage) return;
+            
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.changedTouches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            addPoint(x, y);
+        });
+
+        // Add a point
+        function addPoint(x, y) {
+            const currentIndex = points.length;
+            
+            if (currentIndex >= bodyPartSequence.length) {
+                alert('All body points have been marked! You can still calculate the center of mass with the current points.');
+                return;
+            }
+            
+            const part = bodyPartSequence[currentIndex];
+            points.push({
+                x: x,
+                y: y,
+                weight: part.weight,
+                label: part.name
+            });
+            
+            drawImage();
+            updatePointsList();
+            updateNextPointGuide();
+            document.getElementById('resultPanel').style.display = 'none';
+        }
+
+        // Update the next point guide
+        function updateNextPointGuide() {
+            const guide = document.getElementById('nextPointGuide');
+            const currentIndex = points.length;
+            
+            if (currentIndex >= bodyPartSequence.length) {
+                guide.className = 'next-point-guide complete';
+                guide.querySelector('h3').textContent = '✅ All Points Marked!';
+                document.getElementById('nextPointName').textContent = 'Ready to calculate center of mass';
+                document.getElementById('currentPointIndex').textContent = bodyPartSequence.length;
+            } else {
+                guide.className = 'next-point-guide';
+                guide.querySelector('h3').textContent = '📍 Next Point to Mark';
+                const part = bodyPartSequence[currentIndex];
+                document.getElementById('nextPointName').textContent = part.name;
+                document.getElementById('currentPointIndex').textContent = currentIndex + 1;
+            }
+            
+            document.getElementById('totalPoints').textContent = bodyPartSequence.length;
+            guide.style.display = 'block';
+        }
+
+        // Calculate torso center point (based on original system)
+        function calculateTorsoCenter() {
+            // Need both hips (points 3, 4) and both shoulders (points 11, 12)
+            if (points.length < 13 || !points[3] || !points[4] || !points[11] || !points[12]) {
+                return null;
+            }
+            
+            // Hip midpoint
+            const hipMidX = (points[3].x + points[4].x) / 2;
+            const hipMidY = (points[3].y + points[4].y) / 2;
+            
+            // Shoulder midpoint
+            const shoulderMidX = (points[11].x + points[12].x) / 2;
+            const shoulderMidY = (points[11].y + points[12].y) / 2;
+            
+            // Torso center: 44% from hip midpoint towards shoulder midpoint
+            // Using the same formula as original: new_vektor with VFaktor=0.44
+            const vFactor = 0.44;
+            const torsoX = Math.round(((1 - vFactor) * shoulderMidX) + (vFactor * hipMidX));
+            const torsoY = Math.round(((1 - vFactor) * shoulderMidY) + (vFactor * hipMidY));
+            
+            return {
+                x: torsoX,
+                y: torsoY,
+                weight: 43.0,
+                label: "Torso (calculated)"
+            };
+        }
+
+        // Update points list display
+        function updatePointsList() {
+            const list = document.getElementById('pointsList');
+            
+            if (points.length === 0) {
+                list.innerHTML = '<li style="color: #999; font-style: italic;">No points added yet. Click on the image to add points.</li>';
+                return;
+            }
+            
+            let html = points.map((point, index) => {
+                const part = bodyPartSequence[index];
+                const label = part ? part.name : `Point ${index + 1}`;
+                return `
+                    <li>
+                        <span>
+                            <span class="point-number">${index + 1}. ${label}:</span>
+                            <span class="point-coords">(${Math.round(point.x)}, ${Math.round(point.y)})</span>
+                        </span>
+                        <span>
+                            Weight: 
+                            <input type="number" 
+                                   class="weight-input" 
+                                   value="${point.weight.toFixed(1)}" 
+                                   step="0.1" 
+                                   min="0.1"
+                                   onchange="updatePointWeight(${index}, this.value)">
+                        </span>
+                    </li>
+                `;
+            }).join('');
+            
+            // Add torso if it can be calculated
+            const torso = calculateTorsoCenter();
+            if (torso) {
+                html += `
+                    <li style="background: #e3f2fd; font-weight: bold;">
+                        <span>
+                            <span class="point-number">Torso (calculated):</span>
+                            <span class="point-coords">(${torso.x}, ${torso.y})</span>
+                        </span>
+                        <span>
+                            Weight: <strong>${torso.weight.toFixed(1)}</strong> (fixed)
+                        </span>
+                    </li>
+                `;
+            }
+            
+            list.innerHTML = html;
+        }
+
+        // Update point weight
+        function updatePointWeight(index, weight) {
+            const newWeight = parseFloat(weight);
+            if (!isNaN(newWeight) && newWeight > 0) {
+                points[index].weight = newWeight;
+                drawImage();
+                // Recalculate if result was already shown
+                if (document.getElementById('resultPanel').style.display !== 'none') {
+                    calculateCenterOfMass();
+                }
+            }
+        }
+
+        // Calculate center of mass
+        function calculateCenterOfMassInternal() {
+            if (points.length === 0) {
+                return null;
+            }
+            
+            let totalWeight = 0;
+            let weightedX = 0;
+            let weightedY = 0;
+            
+            // Add all marked points
+            points.forEach(point => {
+                const weight = point.weight || 1.0;
+                weightedX += point.x * weight;
+                weightedY += point.y * weight;
+                totalWeight += weight;
+            });
+            
+            // Add torso if it can be calculated (with 43% weight)
+            const torso = calculateTorsoCenter();
+            if (torso) {
+                weightedX += torso.x * torso.weight;
+                weightedY += torso.y * torso.weight;
+                totalWeight += torso.weight;
+            }
+            
+            if (totalWeight === 0) {
+                return null;
+            }
+            
+            return {
+                x: weightedX / totalWeight,
+                y: weightedY / totalWeight
+            };
+        }
+
+        // Calculate and display center of mass
+        function calculateCenterOfMass() {
+            const result = calculateCenterOfMassInternal();
+            
+            if (!result) {
+                alert('Please add at least one point to calculate the center of mass.');
+                return;
+            }
+            
+            document.getElementById('resultValue').textContent = 
+                `Center of Mass: (${Math.round(result.x)}, ${Math.round(result.y)})`;
+            document.getElementById('resultPanel').style.display = 'block';
+            
+            drawImage();
+        }
+
+        // Clear all points
+        function clearAllPoints() {
+            points = [];
+            drawImage();
+            updatePointsList();
+            updateNextPointGuide();
+            document.getElementById('resultPanel').style.display = 'none';
+        }
+
+        // Reset image
+        function resetImage() {
+            if (confirm('Are you sure you want to reset? This will clear the image and all points.')) {
+                currentImage = null;
+                points = [];
+                imageInput.value = '';
+                document.getElementById('canvasWrapper').style.display = 'none';
+                document.getElementById('resultPanel').style.display = 'none';
+                document.getElementById('nextPointGuide').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
