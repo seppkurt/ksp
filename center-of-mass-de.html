@@ -362,34 +362,29 @@
         let imageOffsetX = 0;
         let imageOffsetY = 0;
 
-        // Körperteil-Sequenz mit Bezeichnungen und Gewichten (basierend auf dem ursprünglichen System)
+        // Körperteil-Sequenz (Gelenke - Gewichte werden aus Segmentzentren berechnet)
         const bodyPartSequence = [
-            { name: "Linke Fußspitze", weight: 2.0, connectTo: null },           // 0
-            { name: "Linker Knöchel", weight: 2.0, connectTo: 0 },                // 1
-            { name: "Linkes Knie", weight: 5.0, connectTo: 1 },                 // 2
-            { name: "Linke Hüfte", weight: 12.0, connectTo: 2 },                // 3
-            { name: "Rechte Hüfte", weight: 12.0, connectTo: 3 },               // 4
-            { name: "Rechtes Knie", weight: 5.0, connectTo: 4 },                 // 5
-            { name: "Rechter Knöchel", weight: 2.0, connectTo: 5 },               // 6
-            { name: "Rechte Fußspitze", weight: 2.0, connectTo: 6 },            // 7
-            { name: "Rechte Handspitze", weight: 1.0, connectTo: null },           // 8
-            { name: "Rechtes Handgelenk", weight: 1.0, connectTo: 8 },               // 9
-            { name: "Rechter Ellenbogen", weight: 2.0, connectTo: 9 },                // 10
-            { name: "Rechte Schulter", weight: 3.0, connectTo: 10 },            // 11
-            { name: "Linke Schulter", weight: 3.0, connectTo: 11 },             // 12
-            { name: "Linker Ellenbogen", weight: 2.0, connectTo: 12 },               // 13
-            { name: "Linkes Handgelenk", weight: 1.0, connectTo: 13 },               // 14
-            { name: "Linke Handspitze", weight: 1.0, connectTo: 14 },            // 15
-            { name: "Kopf", weight: 7.0, connectTo: null }                    // 16
+            { name: "Linke Fußspitze", connectTo: null },           // 0 -> posp[7]
+            { name: "Linker Knöchel", connectTo: 0 },               // 1 -> posp[6]
+            { name: "Linkes Knie", connectTo: 1 },                  // 2 -> posp[5]
+            { name: "Linke Hüfte", connectTo: 2 },                  // 3 -> posp[4]
+            { name: "Rechte Hüfte", connectTo: 3 },                 // 4 -> posp[3]
+            { name: "Rechtes Knie", connectTo: 4 },                 // 5 -> posp[2]
+            { name: "Rechter Knöchel", connectTo: 5 },               // 6 -> posp[1]
+            { name: "Rechte Fußspitze", connectTo: 6 },             // 7 -> posp[0]
+            { name: "Rechte Handspitze", connectTo: null },         // 8 -> posp[8]
+            { name: "Rechtes Handgelenk", connectTo: 8 },            // 9 -> posp[9]
+            { name: "Rechter Ellenbogen", connectTo: 9 },           // 10 -> posp[10]
+            { name: "Rechte Schulter", connectTo: 10 },             // 11 -> posp[11]
+            { name: "Linke Schulter", connectTo: 11 },              // 12 -> posp[12]
+            { name: "Linker Ellenbogen", connectTo: 12 },          // 13 -> posp[13]
+            { name: "Linkes Handgelenk", connectTo: 13 },           // 14 -> posp[14]
+            { name: "Linke Handspitze", connectTo: 14 },             // 15 -> posp[15]
+            { name: "Kopf", connectTo: null }                        // 16 -> posp[16]
         ];
 
-        // Zusätzliche Verbindungen für den Rumpf
-        const torsoConnections = [
-            [3, 4],  // Linke Hüfte zu rechte Hüfte
-            [11, 12], // Rechte Schulter zu linke Schulter
-            [11, 3],  // Rechte Schulter zu linke Hüfte (über berechneten Mittelpunkt)
-            [12, 4]   // Linke Schulter zu rechte Hüfte (über berechneten Mittelpunkt)
-        ];
+        // Zuordnung unserer Punkte zur Reihenfolge posp (rechtes Bein zuerst, dann linkes)
+        const pospMap = [7, 6, 5, 4, 3, 2, 1, 0, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
         // Bild laden, wenn Datei ausgewählt wird
         imageInput.addEventListener('change', function(e) {
@@ -450,9 +445,9 @@
             // Verbindungslinien zuerst zeichnen (damit sie hinter den Punkten erscheinen)
             drawConnectingLines();
             
-            // Alle Punkte zeichnen
+            // Alle Punkte zeichnen (Gelenke)
             points.forEach((point, index) => {
-                drawPoint(point.x, point.y, index + 1, point.weight, point.label);
+                drawPoint(point.x, point.y, index + 1, null, point.label);
             });
             
             // Rumpfzentrum zeichnen, falls es berechnet werden kann
@@ -678,7 +673,6 @@
             points.push({
                 x: x,
                 y: y,
-                weight: part.weight,
                 label: part.name
             });
             
@@ -710,36 +704,78 @@
             guide.style.display = 'block';
         }
 
-        // Rumpfzentrum-Punkt berechnen (basierend auf dem ursprünglichen System)
-        function calculateTorsoCenter() {
-            // Benötigt beide Hüften (Punkte 3, 4) und beide Schultern (Punkte 11, 12)
-            if (points.length < 13 || !points[3] || !points[4] || !points[11] || !points[12]) {
-                return null;
-            }
-            
-            // Hüftmittelpunkt
-            const hipMidX = (points[3].x + points[4].x) / 2;
-            const hipMidY = (points[3].y + points[4].y) / 2;
-            
-            // Schultermittelpunkt
-            const shoulderMidX = (points[11].x + points[12].x) / 2;
-            const shoulderMidY = (points[11].y + points[12].y) / 2;
-            
-            // Rumpfzentrum: 44% vom Hüftmittelpunkt in Richtung Schultermittelpunkt
-            // Verwendet die gleiche Formel wie das Original: new_vektor mit VFaktor=0.44
-            const vFactor = 0.44;
-            const torsoX = Math.round(((1 - vFactor) * shoulderMidX) + (vFactor * hipMidX));
-            const torsoY = Math.round(((1 - vFactor) * shoulderMidY) + (vFactor * hipMidY));
-            
+        // Original PHP: new_vektor(StartX, EndeX, VFaktor)
+        function newVektor(startX, startY, endX, endY, vFactor) {
             return {
-                x: torsoX,
-                y: torsoY,
-                weight: 43.0,
-                label: "Rumpf (berechnet)"
+                x: Math.round(((1 - vFactor) * endX) + (vFactor * startX)),
+                y: Math.round(((1 - vFactor) * endY) + (vFactor * startY))
             };
         }
 
-        // Punkte-Liste-Anzeige aktualisieren
+        // posp-Array in Originalreihenfolge (rechtes Bein, linkes Bein, rechter Arm, linker Arm, Kopf)
+        function getPosp() {
+            const posp = [];
+            for (let i = 0; i < 17; i++) {
+                const p = points[pospMap[i]];
+                if (p) posp.push({ x: p.x, y: p.y });
+                else return null;
+            }
+            return posp.length === 17 ? posp : null;
+        }
+
+        // Alle Segmentzentren (TKSP) berechnen - Original berechne.php Logik
+        function calculateSegmentCenters() {
+            const posp = getPosp();
+            if (!posp) return null;
+
+            const tksp = {};
+            tksp.fussre = newVektor(posp[1].x, posp[1].y, posp[0].x, posp[0].y, 0.44);
+            tksp.untersre = newVektor(posp[1].x, posp[1].y, posp[2].x, posp[2].y, 0.42);
+            tksp.obersre = newVektor(posp[2].x, posp[2].y, posp[3].x, posp[3].y, 0.44);
+            tksp.obersli = newVektor(posp[5].x, posp[5].y, posp[4].x, posp[4].y, 0.44);
+            tksp.untersli = newVektor(posp[5].x, posp[5].y, posp[6].x, posp[6].y, 0.42);
+            tksp.fussli = newVektor(posp[6].x, posp[6].y, posp[7].x, posp[7].y, 0.44);
+            tksp.handre = newVektor(posp[9].x, posp[9].y, posp[8].x, posp[8].y, 0.5);
+            tksp.uarmre = newVektor(posp[10].x, posp[10].y, posp[9].x, posp[9].y, 0.42);
+            tksp.oarmre = newVektor(posp[11].x, posp[11].y, posp[10].x, posp[10].y, 0.47);
+            tksp.oarmli = newVektor(posp[12].x, posp[12].y, posp[13].x, posp[13].y, 0.47);
+            tksp.uarmli = newVektor(posp[13].x, posp[13].y, posp[14].x, posp[14].y, 0.42);
+            tksp.handli = newVektor(posp[14].x, posp[14].y, posp[15].x, posp[15].y, 0.5);
+            const hipMidX = (posp[4].x + posp[3].x) * 0.5;
+            const hipMidY = (posp[4].y + posp[3].y) * 0.5;
+            const shoulderMidX = (posp[12].x + posp[11].x) * 0.5;
+            const shoulderMidY = (posp[12].y + posp[11].y) * 0.5;
+            tksp.rumpf = newVektor(hipMidX, hipMidY, shoulderMidX, shoulderMidY, 0.44);
+            tksp.kopf = { x: Math.round(posp[16].x), y: Math.round(posp[16].y) };
+            return tksp;
+        }
+
+        // Rumpf für Anzeige (gleich wie rumpf in Segmentzentren)
+        function calculateTorsoCenter() {
+            const tksp = calculateSegmentCenters();
+            if (!tksp) return null;
+            return { x: tksp.rumpf.x, y: tksp.rumpf.y, weight: 43.0, label: "Rumpf (berechnet)" };
+        }
+
+        // Segmentzentren-Bezeichnungen und Gewichte (Original-System, Summe = 100)
+        const segmentCenterInfo = [
+            { key: 'kopf', name: 'Kopf', weight: 7 },
+            { key: 'rumpf', name: 'Rumpf', weight: 43 },
+            { key: 'oarmre', name: 'Rechter Oberarm', weight: 3 },
+            { key: 'oarmli', name: 'Linker Oberarm', weight: 3 },
+            { key: 'uarmre', name: 'Rechter Unterarm', weight: 2 },
+            { key: 'uarmli', name: 'Linker Unterarm', weight: 2 },
+            { key: 'handre', name: 'Rechte Hand', weight: 1 },
+            { key: 'handli', name: 'Linke Hand', weight: 1 },
+            { key: 'obersre', name: 'Rechter Oberschenkel', weight: 12 },
+            { key: 'obersli', name: 'Linker Oberschenkel', weight: 12 },
+            { key: 'untersre', name: 'Rechtes Unterschenkel', weight: 5 },
+            { key: 'untersli', name: 'Linkes Unterschenkel', weight: 5 },
+            { key: 'fussre', name: 'Rechter Fuß', weight: 2 },
+            { key: 'fussli', name: 'Linker Fuß', weight: 2 }
+        ];
+
+        // Punkte-Liste-Anzeige - Segmentzentren mit festen Gewichten
         function updatePointsList() {
             const list = document.getElementById('pointsList');
             
@@ -748,94 +784,51 @@
                 return;
             }
             
-            let html = points.map((point, index) => {
-                const part = bodyPartSequence[index];
-                const label = part ? part.name : `Punkt ${index + 1}`;
-                return `
-                    <li>
-                        <span>
-                            <span class="point-number">${index + 1}. ${label}:</span>
-                            <span class="point-coords">(${Math.round(point.x)}, ${Math.round(point.y)})</span>
-                        </span>
-                        <span>
-                            Gewicht: 
-                            <input type="number" 
-                                   class="weight-input" 
-                                   value="${point.weight.toFixed(1)}" 
-                                   step="0.1" 
-                                   min="0.1"
-                                   onchange="updatePointWeight(${index}, this.value)">
-                        </span>
-                    </li>
-                `;
-            }).join('');
-            
-            // Rumpf hinzufügen, falls er berechnet werden kann
-            const torso = calculateTorsoCenter();
-            if (torso) {
-                html += `
-                    <li style="background: #e3f2fd; font-weight: bold;">
-                        <span>
-                            <span class="point-number">Rumpf (berechnet):</span>
-                            <span class="point-coords">(${torso.x}, ${torso.y})</span>
-                        </span>
-                        <span>
-                            Gewicht: <strong>${torso.weight.toFixed(1)}</strong> (fest)
-                        </span>
-                    </li>
-                `;
+            const tksp = calculateSegmentCenters();
+            if (!tksp) {
+                list.innerHTML = '<li style="color: #999; font-style: italic;">Markieren Sie alle 17 Punkte, um Segmentzentren anzuzeigen.</li>';
+                return;
             }
             
+            let html = '<li style="background: #f0f0f0; font-weight: bold;">Segmentzentren (aus Gelenken berechnet):</li>';
+            let totalWeight = 0;
+            segmentCenterInfo.forEach(seg => {
+                const sc = tksp[seg.key];
+                if (sc) {
+                    totalWeight += seg.weight;
+                    html += `
+                        <li>
+                            <span>
+                                <span class="point-number">${seg.name}:</span>
+                                <span class="point-coords">(${sc.x}, ${sc.y})</span>
+                            </span>
+                            <span>Gewicht: <strong>${seg.weight}</strong></span>
+                        </li>
+                    `;
+                }
+            });
+            html += `<li style="background: #e8f5e9;">Gesamtgewicht: <strong>${totalWeight}</strong></li>`;
             list.innerHTML = html;
         }
 
-        // Punktgewicht aktualisieren
-        function updatePointWeight(index, weight) {
-            const newWeight = parseFloat(weight);
-            if (!isNaN(newWeight) && newWeight > 0) {
-                points[index].weight = newWeight;
-                drawImage();
-                // Neu berechnen, falls Ergebnis bereits angezeigt wurde
-                if (document.getElementById('resultPanel').style.display !== 'none') {
-                    calculateCenterOfMass();
-                }
-            }
-        }
-
-        // Körperschwerpunkt berechnen
+        // Körperschwerpunkt berechnen - Originalformel (Gewichte summieren sich zu 100)
         function calculateCenterOfMassInternal() {
-            if (points.length === 0) {
-                return null;
-            }
-            
-            let totalWeight = 0;
-            let weightedX = 0;
-            let weightedY = 0;
-            
-            // Alle markierten Punkte hinzufügen
-            points.forEach(point => {
-                const weight = point.weight || 1.0;
-                weightedX += point.x * weight;
-                weightedY += point.y * weight;
-                totalWeight += weight;
-            });
-            
-            // Rumpf hinzufügen, falls er berechnet werden kann (mit 43% Gewicht)
-            const torso = calculateTorsoCenter();
-            if (torso) {
-                weightedX += torso.x * torso.weight;
-                weightedY += torso.y * torso.weight;
-                totalWeight += torso.weight;
-            }
-            
-            if (totalWeight === 0) {
-                return null;
-            }
-            
-            return {
-                x: weightedX / totalWeight,
-                y: weightedY / totalWeight
-            };
+            const tksp = calculateSegmentCenters();
+            if (!tksp) return null;
+
+            const ksp_x = Math.round(
+                (tksp.kopf.x * 7 + tksp.rumpf.x * 43 + tksp.oarmre.x * 3 + tksp.oarmli.x * 3 +
+                 tksp.uarmre.x * 2 + tksp.uarmli.x * 2 + tksp.handre.x * 1 + tksp.handli.x * 1 +
+                 tksp.obersre.x * 12 + tksp.obersli.x * 12 + tksp.untersre.x * 5 + tksp.untersli.x * 5 +
+                 tksp.fussre.x * 2 + tksp.fussli.x * 2) / 100
+            );
+            const ksp_y = Math.round(
+                (tksp.kopf.y * 7 + tksp.rumpf.y * 43 + tksp.oarmre.y * 3 + tksp.oarmli.y * 3 +
+                 tksp.uarmre.y * 2 + tksp.uarmli.y * 2 + tksp.handre.y * 1 + tksp.handli.y * 1 +
+                 tksp.obersre.y * 12 + tksp.obersli.y * 12 + tksp.untersre.y * 5 + tksp.untersli.y * 5 +
+                 tksp.fussre.y * 2 + tksp.fussli.y * 2) / 100
+            );
+            return { x: ksp_x, y: ksp_y };
         }
 
         // Körperschwerpunkt berechnen und anzeigen
@@ -843,7 +836,7 @@
             const result = calculateCenterOfMassInternal();
             
             if (!result) {
-                alert('Bitte fügen Sie mindestens einen Punkt hinzu, um den Körperschwerpunkt zu berechnen.');
+                alert('Bitte markieren Sie alle 17 Körperpunkte, um den Körperschwerpunkt zu berechnen.');
                 return;
             }
             

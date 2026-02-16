@@ -362,34 +362,29 @@
         let imageOffsetX = 0;
         let imageOffsetY = 0;
 
-        // Body part sequence with labels and weights (based on original system)
+        // Body part sequence (joints - no weights, segment centers are calculated)
         const bodyPartSequence = [
-            { name: "Left Foot Tip", weight: 2.0, connectTo: null },           // 0
-            { name: "Left Ankle", weight: 2.0, connectTo: 0 },                // 1
-            { name: "Left Knee", weight: 5.0, connectTo: 1 },                 // 2
-            { name: "Left Hip", weight: 12.0, connectTo: 2 },                // 3
-            { name: "Right Hip", weight: 12.0, connectTo: 3 },               // 4
-            { name: "Right Knee", weight: 5.0, connectTo: 4 },                 // 5
-            { name: "Right Ankle", weight: 2.0, connectTo: 5 },               // 6
-            { name: "Right Foot Tip", weight: 2.0, connectTo: 6 },            // 7
-            { name: "Right Hand Tip", weight: 1.0, connectTo: null },           // 8
-            { name: "Right Wrist", weight: 1.0, connectTo: 8 },               // 9
-            { name: "Right Elbow", weight: 2.0, connectTo: 9 },                // 10
-            { name: "Right Shoulder", weight: 3.0, connectTo: 10 },            // 11
-            { name: "Left Shoulder", weight: 3.0, connectTo: 11 },             // 12
-            { name: "Left Elbow", weight: 2.0, connectTo: 12 },               // 13
-            { name: "Left Wrist", weight: 1.0, connectTo: 13 },               // 14
-            { name: "Left Hand Tip", weight: 1.0, connectTo: 14 },            // 15
-            { name: "Head", weight: 7.0, connectTo: null }                    // 16
+            { name: "Left Foot Tip", connectTo: null },           // 0 -> posp[7]
+            { name: "Left Ankle", connectTo: 0 },                 // 1 -> posp[6]
+            { name: "Left Knee", connectTo: 1 },                  // 2 -> posp[5]
+            { name: "Left Hip", connectTo: 2 },                  // 3 -> posp[4]
+            { name: "Right Hip", connectTo: 3 },                  // 4 -> posp[3]
+            { name: "Right Knee", connectTo: 4 },                  // 5 -> posp[2]
+            { name: "Right Ankle", connectTo: 5 },                // 6 -> posp[1]
+            { name: "Right Foot Tip", connectTo: 6 },             // 7 -> posp[0]
+            { name: "Right Hand Tip", connectTo: null },           // 8 -> posp[8]
+            { name: "Right Wrist", connectTo: 8 },                // 9 -> posp[9]
+            { name: "Right Elbow", connectTo: 9 },                // 10 -> posp[10]
+            { name: "Right Shoulder", connectTo: 10 },             // 11 -> posp[11]
+            { name: "Left Shoulder", connectTo: 11 },             // 12 -> posp[12]
+            { name: "Left Elbow", connectTo: 12 },                // 13 -> posp[13]
+            { name: "Left Wrist", connectTo: 13 },                 // 14 -> posp[14]
+            { name: "Left Hand Tip", connectTo: 14 },              // 15 -> posp[15]
+            { name: "Head", connectTo: null }                     // 16 -> posp[16]
         ];
 
-        // Additional connections for torso
-        const torsoConnections = [
-            [3, 4],  // Left hip to right hip
-            [11, 12], // Right shoulder to left shoulder
-            [11, 3],  // Right shoulder to left hip (via calculated midpoint)
-            [12, 4]   // Left shoulder to right hip (via calculated midpoint)
-        ];
+        // Map our point indices to original posp order (right leg first, then left leg)
+        const pospMap = [7, 6, 5, 4, 3, 2, 1, 0, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
         // Load image when file is selected
         imageInput.addEventListener('change', function(e) {
@@ -450,9 +445,9 @@
             // Draw connecting lines first (so they appear behind points)
             drawConnectingLines();
             
-            // Draw all points
+            // Draw all points (joints)
             points.forEach((point, index) => {
-                drawPoint(point.x, point.y, index + 1, point.weight, point.label);
+                drawPoint(point.x, point.y, index + 1, null, point.label);
             });
             
             // Draw torso center if it can be calculated
@@ -678,7 +673,6 @@
             points.push({
                 x: x,
                 y: y,
-                weight: part.weight,
                 label: part.name
             });
             
@@ -710,36 +704,78 @@
             guide.style.display = 'block';
         }
 
-        // Calculate torso center point (based on original system)
-        function calculateTorsoCenter() {
-            // Need both hips (points 3, 4) and both shoulders (points 11, 12)
-            if (points.length < 13 || !points[3] || !points[4] || !points[11] || !points[12]) {
-                return null;
-            }
-            
-            // Hip midpoint
-            const hipMidX = (points[3].x + points[4].x) / 2;
-            const hipMidY = (points[3].y + points[4].y) / 2;
-            
-            // Shoulder midpoint
-            const shoulderMidX = (points[11].x + points[12].x) / 2;
-            const shoulderMidY = (points[11].y + points[12].y) / 2;
-            
-            // Torso center: 44% from hip midpoint towards shoulder midpoint
-            // Using the same formula as original: new_vektor with VFaktor=0.44
-            const vFactor = 0.44;
-            const torsoX = Math.round(((1 - vFactor) * shoulderMidX) + (vFactor * hipMidX));
-            const torsoY = Math.round(((1 - vFactor) * shoulderMidY) + (vFactor * hipMidY));
-            
+        // Original PHP: new_vektor(StartX, EndeX, VFaktor)
+        function newVektor(startX, startY, endX, endY, vFactor) {
             return {
-                x: torsoX,
-                y: torsoY,
-                weight: 43.0,
-                label: "Torso (calculated)"
+                x: Math.round(((1 - vFactor) * endX) + (vFactor * startX)),
+                y: Math.round(((1 - vFactor) * endY) + (vFactor * startY))
             };
         }
 
-        // Update points list display
+        // Get posp array in original order (right leg, left leg, right arm, left arm, head)
+        function getPosp() {
+            const posp = [];
+            for (let i = 0; i < 17; i++) {
+                const p = points[pospMap[i]];
+                if (p) posp.push({ x: p.x, y: p.y });
+                else return null;
+            }
+            return posp.length === 17 ? posp : null;
+        }
+
+        // Calculate all segment centers (TKSP) - original berechne.php logic
+        function calculateSegmentCenters() {
+            const posp = getPosp();
+            if (!posp) return null;
+
+            const tksp = {};
+            tksp.fussre = newVektor(posp[1].x, posp[1].y, posp[0].x, posp[0].y, 0.44);
+            tksp.untersre = newVektor(posp[1].x, posp[1].y, posp[2].x, posp[2].y, 0.42);
+            tksp.obersre = newVektor(posp[2].x, posp[2].y, posp[3].x, posp[3].y, 0.44);
+            tksp.obersli = newVektor(posp[5].x, posp[5].y, posp[4].x, posp[4].y, 0.44);
+            tksp.untersli = newVektor(posp[5].x, posp[5].y, posp[6].x, posp[6].y, 0.42);
+            tksp.fussli = newVektor(posp[6].x, posp[6].y, posp[7].x, posp[7].y, 0.44);
+            tksp.handre = newVektor(posp[9].x, posp[9].y, posp[8].x, posp[8].y, 0.5);
+            tksp.uarmre = newVektor(posp[10].x, posp[10].y, posp[9].x, posp[9].y, 0.42);
+            tksp.oarmre = newVektor(posp[11].x, posp[11].y, posp[10].x, posp[10].y, 0.47);
+            tksp.oarmli = newVektor(posp[12].x, posp[12].y, posp[13].x, posp[13].y, 0.47);
+            tksp.uarmli = newVektor(posp[13].x, posp[13].y, posp[14].x, posp[14].y, 0.42);
+            tksp.handli = newVektor(posp[14].x, posp[14].y, posp[15].x, posp[15].y, 0.5);
+            const hipMidX = (posp[4].x + posp[3].x) * 0.5;
+            const hipMidY = (posp[4].y + posp[3].y) * 0.5;
+            const shoulderMidX = (posp[12].x + posp[11].x) * 0.5;
+            const shoulderMidY = (posp[12].y + posp[11].y) * 0.5;
+            tksp.rumpf = newVektor(hipMidX, hipMidY, shoulderMidX, shoulderMidY, 0.44);
+            tksp.kopf = { x: Math.round(posp[16].x), y: Math.round(posp[16].y) };
+            return tksp;
+        }
+
+        // Torso for display (same as rumpf in segment centers)
+        function calculateTorsoCenter() {
+            const tksp = calculateSegmentCenters();
+            if (!tksp) return null;
+            return { x: tksp.rumpf.x, y: tksp.rumpf.y, weight: 43.0, label: "Torso (calculated)" };
+        }
+
+        // Segment center labels and weights (original system, sum = 100)
+        const segmentCenterInfo = [
+            { key: 'kopf', name: 'Head', weight: 7 },
+            { key: 'rumpf', name: 'Torso', weight: 43 },
+            { key: 'oarmre', name: 'Right upper arm', weight: 3 },
+            { key: 'oarmli', name: 'Left upper arm', weight: 3 },
+            { key: 'uarmre', name: 'Right lower arm', weight: 2 },
+            { key: 'uarmli', name: 'Left lower arm', weight: 2 },
+            { key: 'handre', name: 'Right hand', weight: 1 },
+            { key: 'handli', name: 'Left hand', weight: 1 },
+            { key: 'obersre', name: 'Right thigh', weight: 12 },
+            { key: 'obersli', name: 'Left thigh', weight: 12 },
+            { key: 'untersre', name: 'Right lower leg', weight: 5 },
+            { key: 'untersli', name: 'Left lower leg', weight: 5 },
+            { key: 'fussre', name: 'Right foot', weight: 2 },
+            { key: 'fussli', name: 'Left foot', weight: 2 }
+        ];
+
+        // Update points list display - show segment centers with fixed weights
         function updatePointsList() {
             const list = document.getElementById('pointsList');
             
@@ -748,94 +784,51 @@
                 return;
             }
             
-            let html = points.map((point, index) => {
-                const part = bodyPartSequence[index];
-                const label = part ? part.name : `Point ${index + 1}`;
-                return `
-                    <li>
-                        <span>
-                            <span class="point-number">${index + 1}. ${label}:</span>
-                            <span class="point-coords">(${Math.round(point.x)}, ${Math.round(point.y)})</span>
-                        </span>
-                        <span>
-                            Weight: 
-                            <input type="number" 
-                                   class="weight-input" 
-                                   value="${point.weight.toFixed(1)}" 
-                                   step="0.1" 
-                                   min="0.1"
-                                   onchange="updatePointWeight(${index}, this.value)">
-                        </span>
-                    </li>
-                `;
-            }).join('');
-            
-            // Add torso if it can be calculated
-            const torso = calculateTorsoCenter();
-            if (torso) {
-                html += `
-                    <li style="background: #e3f2fd; font-weight: bold;">
-                        <span>
-                            <span class="point-number">Torso (calculated):</span>
-                            <span class="point-coords">(${torso.x}, ${torso.y})</span>
-                        </span>
-                        <span>
-                            Weight: <strong>${torso.weight.toFixed(1)}</strong> (fixed)
-                        </span>
-                    </li>
-                `;
+            const tksp = calculateSegmentCenters();
+            if (!tksp) {
+                list.innerHTML = '<li style="color: #999; font-style: italic;">Mark all 17 points to see segment centers.</li>';
+                return;
             }
             
+            let html = '<li style="background: #f0f0f0; font-weight: bold;">Segment centers (calculated from joints):</li>';
+            let totalWeight = 0;
+            segmentCenterInfo.forEach(seg => {
+                const sc = tksp[seg.key];
+                if (sc) {
+                    totalWeight += seg.weight;
+                    html += `
+                        <li>
+                            <span>
+                                <span class="point-number">${seg.name}:</span>
+                                <span class="point-coords">(${sc.x}, ${sc.y})</span>
+                            </span>
+                            <span>Weight: <strong>${seg.weight}</strong></span>
+                        </li>
+                    `;
+                }
+            });
+            html += `<li style="background: #e8f5e9;">Total weight: <strong>${totalWeight}</strong></li>`;
             list.innerHTML = html;
         }
 
-        // Update point weight
-        function updatePointWeight(index, weight) {
-            const newWeight = parseFloat(weight);
-            if (!isNaN(newWeight) && newWeight > 0) {
-                points[index].weight = newWeight;
-                drawImage();
-                // Recalculate if result was already shown
-                if (document.getElementById('resultPanel').style.display !== 'none') {
-                    calculateCenterOfMass();
-                }
-            }
-        }
-
-        // Calculate center of mass
+        // Calculate center of mass - original formula (weights sum to 100)
         function calculateCenterOfMassInternal() {
-            if (points.length === 0) {
-                return null;
-            }
-            
-            let totalWeight = 0;
-            let weightedX = 0;
-            let weightedY = 0;
-            
-            // Add all marked points
-            points.forEach(point => {
-                const weight = point.weight || 1.0;
-                weightedX += point.x * weight;
-                weightedY += point.y * weight;
-                totalWeight += weight;
-            });
-            
-            // Add torso if it can be calculated (with 43% weight)
-            const torso = calculateTorsoCenter();
-            if (torso) {
-                weightedX += torso.x * torso.weight;
-                weightedY += torso.y * torso.weight;
-                totalWeight += torso.weight;
-            }
-            
-            if (totalWeight === 0) {
-                return null;
-            }
-            
-            return {
-                x: weightedX / totalWeight,
-                y: weightedY / totalWeight
-            };
+            const tksp = calculateSegmentCenters();
+            if (!tksp) return null;
+
+            const ksp_x = Math.round(
+                (tksp.kopf.x * 7 + tksp.rumpf.x * 43 + tksp.oarmre.x * 3 + tksp.oarmli.x * 3 +
+                 tksp.uarmre.x * 2 + tksp.uarmli.x * 2 + tksp.handre.x * 1 + tksp.handli.x * 1 +
+                 tksp.obersre.x * 12 + tksp.obersli.x * 12 + tksp.untersre.x * 5 + tksp.untersli.x * 5 +
+                 tksp.fussre.x * 2 + tksp.fussli.x * 2) / 100
+            );
+            const ksp_y = Math.round(
+                (tksp.kopf.y * 7 + tksp.rumpf.y * 43 + tksp.oarmre.y * 3 + tksp.oarmli.y * 3 +
+                 tksp.uarmre.y * 2 + tksp.uarmli.y * 2 + tksp.handre.y * 1 + tksp.handli.y * 1 +
+                 tksp.obersre.y * 12 + tksp.obersli.y * 12 + tksp.untersre.y * 5 + tksp.untersli.y * 5 +
+                 tksp.fussre.y * 2 + tksp.fussli.y * 2) / 100
+            );
+            return { x: ksp_x, y: ksp_y };
         }
 
         // Calculate and display center of mass
@@ -843,7 +836,7 @@
             const result = calculateCenterOfMassInternal();
             
             if (!result) {
-                alert('Please add at least one point to calculate the center of mass.');
+                alert('Please mark all 17 body points to calculate the center of mass.');
                 return;
             }
             

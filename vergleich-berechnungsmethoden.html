@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vergleich der Berechnungsmethoden – Körperschwerpunkt</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        .intro {
+            color: #555;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #667eea;
+            margin: 35px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 1.4em;
+        }
+        h3 {
+            color: #444;
+            margin: 25px 0 10px;
+            font-size: 1.15em;
+        }
+        p {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0 25px;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) { background: #f8f9fa; }
+        tr:hover { background: #f0f2ff; }
+        .code {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .code.multiline { white-space: pre-wrap; }
+        ul {
+            margin: 15px 0 25px 25px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        strong { color: #333; }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #e0e0e0;
+            margin: 30px 0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover { text-decoration: underline; }
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            table { font-size: 0.85em; }
+            th, td { padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Zurück zum Rechner</a>
+
+        <h1>Vergleich der Berechnungsmethoden für den Körperschwerpunkt</h1>
+        <p class="intro">Dieses Dokument vergleicht die beiden Methoden zur Berechnung des Körperschwerpunkts (KSP) aus markierten Körperpunkten.</p>
+
+        <hr>
+
+        <h2>Übersicht</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Aspekt</th>
+                    <th>Methode 1: Vereinfacht (Joint-basiert)</th>
+                    <th>Methode 2: Original (Segment-basiert)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Eingabepunkte</strong></td><td>17 Gelenke/Landmarken</td><td>17 Gelenke/Landmarken</td></tr>
+                <tr><td><strong>Verwendete Punkte</strong></td><td>Gelenke direkt mit Gewichten</td><td>Berechnete Segmentzentren (TKSP)</td></tr>
+                <tr><td><strong>Gewichtssumme</strong></td><td>108 (65 + 43 Torso)</td><td>100</td></tr>
+                <tr><td><strong>Ergebnis</strong></td><td>Abweichend</td><td>Anatomisch korrekt</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>Methode 1: Vereinfachte Berechnung (Joint-basiert)</h2>
+        <h3>Prinzip</h3>
+        <p>Die markierten Gelenkpunkte werden <strong>direkt</strong> als gewichtete Punkte verwendet. Jeder Punkt erhält ein Gewicht entsprechend dem Körperteil, zu dem er gehört.</p>
+
+        <h3>Gewichte der Gelenkpunkte</h3>
+        <table>
+            <thead>
+                <tr><th>Punkt</th><th>Körperteil</th><th>Gewicht</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Linke Fußspitze</td><td>2,0</td></tr>
+                <tr><td>2</td><td>Linkes Knöchel</td><td>2,0</td></tr>
+                <tr><td>3</td><td>Linkes Knie</td><td>5,0</td></tr>
+                <tr><td>4</td><td>Linke Hüfte</td><td>12,0</td></tr>
+                <tr><td>5</td><td>Rechte Hüfte</td><td>12,0</td></tr>
+                <tr><td>6</td><td>Rechtes Knie</td><td>5,0</td></tr>
+                <tr><td>7</td><td>Rechtes Knöchel</td><td>2,0</td></tr>
+                <tr><td>8</td><td>Rechte Fußspitze</td><td>2,0</td></tr>
+                <tr><td>9</td><td>Rechte Handspitze</td><td>1,0</td></tr>
+                <tr><td>10</td><td>Rechtes Handgelenk</td><td>1,0</td></tr>
+                <tr><td>11</td><td>Rechter Ellenbogen</td><td>2,0</td></tr>
+                <tr><td>12</td><td>Rechte Schulter</td><td>3,0</td></tr>
+                <tr><td>13</td><td>Linke Schulter</td><td>3,0</td></tr>
+                <tr><td>14</td><td>Linker Ellenbogen</td><td>2,0</td></tr>
+                <tr><td>15</td><td>Linkes Handgelenk</td><td>1,0</td></tr>
+                <tr><td>16</td><td>Linke Handspitze</td><td>1,0</td></tr>
+                <tr><td>17</td><td>Kopf</td><td>7,0</td></tr>
+                <tr><td>—</td><td><strong>Rumpf (berechnet)</strong></td><td><strong>43,0</strong></td></tr>
+                <tr><td></td><td><strong>Summe</strong></td><td><strong>108,0</strong></td></tr>
+            </tbody>
+        </table>
+
+        <h3>Formel</h3>
+        <div class="code multiline">KSP_x = Σ(Punkt_x × Gewicht) / Σ(Gewicht)
+KSP_y = Σ(Punkt_y × Gewicht) / Σ(Gewicht)</div>
+
+        <h3>Nachteil</h3>
+        <p>Gelenke sind <strong>keine</strong> Massenschwerpunkte. Der Massenschwerpunkt eines Segments (z.B. Oberschenkel) liegt zwischen den Gelenken, nicht an den Gelenken selbst. Die Vereinfachung führt zu weniger genauen Ergebnissen.</p>
+
+        <hr>
+
+        <h2>Methode 2: Original-Berechnung (Segment-basiert)</h2>
+        <h3>Prinzip</h3>
+        <p>Aus den 17 Gelenkpunkten werden zunächst die <strong>Teilschwerpunkte (TKSP)</strong> der 14 Körpersegmente berechnet. Diese Segmentzentren repräsentieren die tatsächlichen Massenschwerpunkte der Körperteile. Anschließend wird der Gesamt-KSP als gewichteter Mittelwert dieser Segmentzentren berechnet.</p>
+
+        <h3>Berechnung der Segmentzentren (TKSP)</h3>
+        <p>Die Formel <code>new_vektor(Start, Ende, VFaktor)</code> berechnet einen Punkt auf der Linie zwischen Start und Ende:</p>
+        <div class="code">Punkt = (1 - VFaktor) × Ende + VFaktor × Start</div>
+
+        <table>
+            <thead>
+                <tr><th>Segment</th><th>Von → Bis</th><th>VFaktor</th><th>Beschreibung</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Rechter Fuß</td><td>Knöchel → Fußspitze</td><td>0,44</td><td>44 % vom Knöchel zur Spitze</td></tr>
+                <tr><td>Rechtes Unterschenkel</td><td>Knöchel → Knie</td><td>0,42</td><td>42 % vom Knöchel zum Knie</td></tr>
+                <tr><td>Rechter Oberschenkel</td><td>Knie → Hüfte</td><td>0,44</td><td>44 % vom Knie zur Hüfte</td></tr>
+                <tr><td>Linker Oberschenkel</td><td>Knie → Hüfte</td><td>0,44</td><td>44 % vom Knie zur Hüfte</td></tr>
+                <tr><td>Linkes Unterschenkel</td><td>Knie → Knöchel</td><td>0,42</td><td>42 % vom Knie zum Knöchel</td></tr>
+                <tr><td>Linker Fuß</td><td>Knöchel → Fußspitze</td><td>0,44</td><td>44 % vom Knöchel zur Spitze</td></tr>
+                <tr><td>Rechte Hand</td><td>Handgelenk → Handspitze</td><td>0,50</td><td>Mitte (50 %)</td></tr>
+                <tr><td>Rechter Unterarm</td><td>Ellenbogen → Handgelenk</td><td>0,42</td><td>42 % vom Ellenbogen</td></tr>
+                <tr><td>Rechter Oberarm</td><td>Schulter → Ellenbogen</td><td>0,47</td><td>47 % von der Schulter</td></tr>
+                <tr><td>Linker Oberarm</td><td>Schulter → Ellenbogen</td><td>0,47</td><td>47 % von der Schulter</td></tr>
+                <tr><td>Linker Unterarm</td><td>Ellenbogen → Handgelenk</td><td>0,42</td><td>42 % vom Ellenbogen</td></tr>
+                <tr><td>Linke Hand</td><td>Handgelenk → Handspitze</td><td>0,50</td><td>Mitte (50 %)</td></tr>
+                <tr><td>Rumpf</td><td>Hüftmitte → Schultermitte</td><td>0,44</td><td>44 % von der Hüftmitte</td></tr>
+                <tr><td>Kopf</td><td>—</td><td>—</td><td>Direkt (Kopfpunkt)</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Gewichte der Segmentzentren (Summe = 100)</h3>
+        <table>
+            <thead>
+                <tr><th>Segment</th><th>Gewicht</th><th>Anteil</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Kopf</td><td>7</td><td>7 %</td></tr>
+                <tr><td>Rumpf</td><td>43</td><td>43 %</td></tr>
+                <tr><td>Rechter Oberarm</td><td>3</td><td>3 %</td></tr>
+                <tr><td>Linker Oberarm</td><td>3</td><td>3 %</td></tr>
+                <tr><td>Rechter Unterarm</td><td>2</td><td>2 %</td></tr>
+                <tr><td>Linker Unterarm</td><td>2</td><td>2 %</td></tr>
+                <tr><td>Rechte Hand</td><td>1</td><td>1 %</td></tr>
+                <tr><td>Linke Hand</td><td>1</td><td>1 %</td></tr>
+                <tr><td>Rechter Oberschenkel</td><td>12</td><td>12 %</td></tr>
+                <tr><td>Linker Oberschenkel</td><td>12</td><td>12 %</td></tr>
+                <tr><td>Rechtes Unterschenkel</td><td>5</td><td>5 %</td></tr>
+                <tr><td>Linkes Unterschenkel</td><td>5</td><td>5 %</td></tr>
+                <tr><td>Rechter Fuß</td><td>2</td><td>2 %</td></tr>
+                <tr><td>Linker Fuß</td><td>2</td><td>2 %</td></tr>
+                <tr><td><strong>Summe</strong></td><td><strong>100</strong></td><td><strong>100 %</strong></td></tr>
+            </tbody>
+        </table>
+
+        <h3>Formel (Original berechne.php)</h3>
+        <div class="code multiline">KSP_x = (kopf×7 + rumpf×43 + oarmre×3 + oarmli×3 + uarmre×2 + uarmli×2 
+         + handre×1 + handli×1 + obersre×12 + obersli×12 
+         + untersre×5 + untersli×5 + fussre×2 + fussli×2) / 100</div>
+
+        <hr>
+
+        <h2>Vergleich der Ergebnisse</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kriterium</th>
+                    <th>Methode 1 (Vereinfacht)</th>
+                    <th>Methode 2 (Original)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Anatomische Korrektheit</strong></td><td>Geringer – Gelenke ≠ Massenschwerpunkte</td><td>Höher – Segmentzentren entsprechen Massenschwerpunkten</td></tr>
+                <tr><td><strong>Berechnungsaufwand</strong></td><td>Einfacher – Direkte Gewichtung</td><td>Höher – Zwei Schritte (TKSP → KSP)</td></tr>
+                <tr><td><strong>Gewichtssumme</strong></td><td>108 (Normierung nötig)</td><td>100 (Prozentanteile)</td></tr>
+                <tr><td><strong>Gewichtsanpassung</strong></td><td>Möglich pro Punkt</td><td>Fest – Anatomische Standardwerte</td></tr>
+                <tr><td><strong>Verwendung</strong></td><td>Schnelle Näherung</td><td>Wissenschaftliche/medizinische Anwendung</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>Zusammenfassung</h2>
+        <p>Die <strong>Original-Methode (Segment-basiert)</strong> ist die empfohlene Berechnungsweise, da sie:</p>
+        <ul>
+            <li><strong>Anatomisch fundiert</strong> ist – die VFaktor-Werte basieren auf Segmentanalysen</li>
+            <li><strong>Segmentzentren</strong> verwendet statt Gelenkpositionen</li>
+            <li><strong>Standardisierte Gewichte</strong> nutzt (z.B. 43 % Rumpf, 7 % Kopf)</li>
+            <li><strong>Mit der ursprünglichen PHP-Implementierung</strong> übereinstimmt</li>
+        </ul>
+        <p>Die aktuelle Implementierung in <code>center-of-mass.html</code> und <code>center-of-mass-de.html</code> verwendet die <strong>Original-Methode (Segment-basiert)</strong>.</p>
+
+        <p style="margin-top: 30px;"><a href="index.html" class="back-link">← Zurück zum Rechner</a></p>
+    </div>
+</body>
+</html>
